@@ -4,13 +4,13 @@ PREFIX ?= $(HOME)/.qntx
 DC ?= ldc2
 DUB ?= dub
 
-# Restart — tell running QNTX to hot-restart faal. Silent no-op if QNTX isn't running.
+# Restart — POST /api/plugins/faal/restart (ADR-002) to the node on BACKEND_PORT, default 8772.
+# Silent no-op when no node answers there.
 define restart-plugin
-	@TOML_PORT=$$(grep -E '^port\s*=' ../../am.toml 2>/dev/null | head -1 | sed 's/.*=\s*//;s/[^0-9]//g' || echo ""); \
-	 PORT=$${BACKEND_PORT:-$${TOML_PORT:-8772}}; \
+	@PORT=$${BACKEND_PORT:-8772}; \
 	 curl -sf -X POST http://127.0.0.1:$$PORT/api/plugins/faal/restart > /dev/null 2>&1 \
 		&& echo "  ↻ LOADED — faal restarted, live at http://127.0.0.1:$$PORT" \
-		|| (echo "  ⊘ NOT LOADED — QNTX server is not running, binary is built but not active" && echo "    → run: make dev")
+		|| echo "  ⊘ NOT LOADED — no QNTX node answers on 127.0.0.1:$$PORT, binary is built but not active"
 endef
 
 build: ## Build faal plugin binary
